@@ -1,0 +1,80 @@
+﻿@page "/operations"
+@using Domain.Entities
+@inject IOperationService OperationService
+
+@code {
+    private List<Operation> Operations;
+    private bool ShowAddOperationModal = false;
+    private bool ShowAddDeviceModal = false;
+    private Operation SelectedOperation;
+
+    protected override void OnInitialized()
+    {
+        Operations = OperationService.GetOperations();
+    }
+
+    private void AddOperation(Operation operation)
+    {
+        OperationService.AddOperation(operation);
+        Operations = OperationService.GetOperations(); // Refresh the list
+        ShowAddOperationModal = false;
+    }
+
+    private void RemoveOperation(int operationId)
+    {
+        OperationService.RemoveOperation(operationId);
+        Operations = OperationService.GetOperations(); // Refresh the list
+    }
+
+    private void ShowDeviceModal(Operation operation)
+    {
+        SelectedOperation = operation;
+        ShowAddDeviceModal = true;
+    }
+
+    private void AddDevice(Device device)
+    {
+        OperationService.AddDeviceToOperation(SelectedOperation.OperationID, device);
+        Operations = OperationService.GetOperations(); // Refresh the list
+        ShowAddDeviceModal = false;
+    }
+}
+
+<h3>Operations</h3>
+
+<button @onclick="() => ShowAddOperationModal = true">Add Operation</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Order</th>
+            <th>Device</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var operation in Operations)
+        {
+            <tr>
+                <td>@operation.Name</td>
+                <td>@operation.OrderInWhichToPerform</td>
+                <td>@operation.Device?.Name</td>
+                <td>
+                    <button @onclick="() => ShowDeviceModal(operation)">Add Device</button>
+                    <button @onclick="() => RemoveOperation(operation.OperationID)">Remove</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (ShowAddOperationModal)
+{
+    <AddOperationModal OnOperationAdded="AddOperation" OnCancel="() => ShowAddOperationModal = false" />
+}
+
+@if (ShowAddDeviceModal)
+{
+    <AddDeviceModal OnDeviceAdded="AddDevice" OnCancel="() => ShowAddDeviceModal = false" />
+}
